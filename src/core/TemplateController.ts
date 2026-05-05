@@ -1,4 +1,4 @@
-import {TAbstractFile} from 'obsidian';
+import {TAbstractFile, TFile} from 'obsidian';
 import {NoteType, TemplatePlugin} from "../base/enum";
 import Path from "../util/Path";
 import PathUtil from "../util/PathUtil";
@@ -100,6 +100,32 @@ export default class TemplateController {
 
     public hasTemplateFile(filename: string): boolean {
         return this.getTemplateFileByFilename(filename) !== null;
+    }
+
+    /**
+     * 获取模板渲染后的内容（用于创建文件时直接写入）
+     * @param noteType 笔记类型
+     * @param noteFilename 笔记文件名（不含扩展名），用于替换 {{title}} 等变量
+     * @returns 渲染后的内容；如果没有配置模板则返回空字符串
+     */
+    public async getTemplateContents(noteType: NoteType, noteFilename: string): Promise<string> {
+        if (!this.templateUtil.isEnable()) {
+            return "";
+        }
+
+        const templateFile = this.getTemplateFileByNoteType(noteType);
+        if (templateFile === null) {
+            return "";
+        }
+
+        return this.templateUtil.getRenderedContent(templateFile, noteFilename);
+    }
+
+    /**
+     * 文件创建后的后处理（Templater 需要解析 tp.xxx 语法）
+     */
+    public async postProcess(file: TFile): Promise<void> {
+        await this.templateUtil.postProcess(file);
     }
 
     public insertTemplate(noteType: NoteType) {

@@ -1,4 +1,4 @@
-import {TAbstractFile} from 'obsidian';
+import {TAbstractFile, TFile} from 'obsidian';
 import DustCalendarPlugin from "../main";
 import Path from "./Path";
 
@@ -29,8 +29,28 @@ export default class TemplateUtil {
     }
 
     /**
-     * 向指定的文件中插入模板
-     * @param templateFile
+     * 读取模板文件内容并做基础变量替换，返回渲染后的内容
+     */
+    public async getRenderedContent(templateFile: TAbstractFile, noteFilename: string): Promise<string> {
+        if (!(templateFile instanceof TFile)) {
+            return "";
+        }
+        const raw = await this.plugin.app.vault.cachedRead(templateFile);
+        return this.replaceVariables(raw, noteFilename);
+    }
+
+    protected replaceVariables(content: string, noteFilename: string): string {
+        return content;
+    }
+
+    /**
+     * 文件创建后的后处理（如 Templater 需要解析 tp.xxx 语法）
+     */
+    public async postProcess(file: TFile): Promise<void> {
+    }
+
+    /**
+     * @deprecated 旧方法，向活跃编辑器插入模板
      */
     public insertTemplateImpl(templateFile: TAbstractFile) {
 

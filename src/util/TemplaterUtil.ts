@@ -1,4 +1,4 @@
-import {TAbstractFile} from 'obsidian';
+import {TAbstractFile, TFile} from 'obsidian';
 import TemplateUtil from "./TemplateUtil";
 import DustCalendarPlugin from "../main";
 import Path from "./Path";
@@ -16,6 +16,13 @@ export default class TemplaterUtil extends TemplateUtil {
 
     public getTemplateFolder(): Path {
         return new Path((this.plugin.app as any).plugins.plugins["templater-obsidian"].settings.templates_folder);
+    }
+
+    public async postProcess(file: TFile): Promise<void> {
+        const templaterPlugin = (this.plugin.app as any).plugins.plugins["templater-obsidian"];
+        if (templaterPlugin?.templater) {
+            await templaterPlugin.templater.overwrite_file_commands(file);
+        }
     }
 
     public insertTemplateImpl(templateFile: TAbstractFile) {

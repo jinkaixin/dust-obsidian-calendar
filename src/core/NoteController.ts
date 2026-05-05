@@ -1,6 +1,6 @@
 import {MarkdownView, TAbstractFile, TFile, WorkspaceLeaf} from "obsidian";
 import {DateTime} from "luxon";
-import {NoteType, SelectedItemType} from "../base/enum";
+import {NoteType, SelectedItemType, TemplatePlugin} from "../base/enum";
 import SelectedItem from "../entity/SelectedItem";
 import Path from "../util/Path";
 import PathUtil from "../util/PathUtil";
@@ -212,38 +212,53 @@ export default class NoteController {
     }
 
     public async createNote(filename: Path): Promise<void> {
-        const abstractFile: TAbstractFile = await PathUtil.create(filename, this.plugin.app.vault);
-        await this.openNoteTabView(abstractFile as TFile);
-        this.plugin.templateController.insertTemplate(this.noteType);
+        const vault = this.plugin.app.vault;
+        const noteFilename = filename.pureFilename.string;
+
+        // 先确保目录存在
+        const parentPath = filename.parent;
+        if (parentPath.string.length > 0) {
+            await PathUtil.create(parentPath, vault);
+        }
+
+        // 读取模板内容，创建文件时直接写入（而非创建空文件再插入）
+        const templateContents = await this.plugin.templateController.getTemplateContents(this.noteType, noteFilename);
+        const file = await vault.create(filename.string, templateContents);
+
+        // 打开文件
+        const {workspace} = this.plugin.app;
+        const leaf = workspace.getLeaf("tab");
+        await leaf.openFile(file);
+        workspace.revealLeaf(leaf);
+        workspace.setActiveLeaf(leaf, {focus: true});
+
+        // Templater 后处理：解析 tp.xxx 语法
+        if (this.plugin.database.setting.templatePlugin === TemplatePlugin.TEMPLATER) {
+            await this.plugin.templateController.postProcess(file);
+        }
+
         // 新建文件之后，需要更新统计信息
-        this.plugin.noteStatisticController.addTaskByFile(abstractFile);
+        this.plugin.noteStatisticController.addTaskByFile(file);
     }
 
-    private async openNoteTabView(tFile: TFile): Promise<void> {
+    private openNoteTabView(tFile: TFile): void {
         const {workspace} = this.plugin.app;
         let targetLeaf: WorkspaceLeaf | null = null;
-        const leaves: WorkspaceLeaf[] = [];
-        workspace.iterateRootLeaves(leaf => leaves.push(leaf));
-
-        for (const leaf of leaves) {
-            if (leaf.getViewState().type !== "markdown") {
-                continue;
+        workspace.iterateRootLeaves(leaf => {
+            if (leaf.getViewState().type === "markdown" && leaf.getDisplayText() === tFile.basename) {
+                let view = leaf.view as MarkdownView;
+                if (view.file !== null && view.file.path === tFile.path && targetLeaf === null) {
+                    targetLeaf = leaf;
+                }
             }
-            await leaf.loadIfDeferred();
-
-            const view = leaf.view;
-            if (view instanceof MarkdownView && view.file !== null && view.file.path === tFile.path) {
-                targetLeaf = leaf;
-                break;
-            }
-        }
+        });
 
         if (targetLeaf === null) {
             targetLeaf = workspace.getLeaf("tab");
-            await targetLeaf.openFile(tFile);
+            targetLeaf.openFile(tFile).then(() => {
+            });
         }
-        await workspace.revealLeaf(targetLeaf);
-        // 移动焦点到笔记编辑区域
+        workspace.revealLeaf(targetLeaf);
         workspace.setActiveLeaf(targetLeaf, {focus: true});
     }
 
