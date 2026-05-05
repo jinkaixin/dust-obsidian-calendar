@@ -128,7 +128,15 @@ function DayItem({
         // 如果发生连击，只有第一次点击才会切换选中对象，并且能够避免干扰双击事件
         if (e.detail === 1) {
             dispatch(updateSelectedItem(newSelectItem));
-            plugin.noteController.openNoteBySelectedItem(newSelectItem)
+            if (plugin.noteController.getShouldOpenNoteOnSingleClick()) {
+                plugin.noteController.openNoteBySelectedItem(newSelectItem);
+            }
+        }
+    }
+
+    const onDoubleClickCallback = () => {
+        if (!plugin.noteController.getShouldOpenNoteOnSingleClick()) {
+            plugin.noteController.openNoteBySelectedItem(newSelectItem);
         }
     }
 
@@ -140,7 +148,7 @@ function DayItem({
     }
 
     return <div className={bodyStyle} onClick={onClickCallback}
-                onDoubleClick={() => plugin.noteController.openNoteBySelectedItem(selectedItem)}
+                onDoubleClick={onDoubleClickCallback}
                 style={{cursor: 'pointer'}}>
         <DayItemBody targetDay={targetDay} dayListOfMonthView={dayListOfMonthView} isSelected={isSelected}/>
         {
@@ -171,6 +179,14 @@ function WeekIndexItem({targetDay}: { targetDay: DateTime }) {
         // 如果发生连击，只有第一次点击才会切换选中对象，并且能够避免干扰双击事件
         if (e.detail === 1) {
             dispatch(updateSelectedItem(newSelectItem));
+            if (plugin.noteController.getShouldOpenNoteOnSingleClick()) {
+                plugin.noteController.openNoteBySelectedItem(newSelectItem);
+            }
+        }
+    }
+
+    const onDoubleClickCallback = () => {
+        if (!plugin.noteController.getShouldOpenNoteOnSingleClick()) {
             plugin.noteController.openNoteBySelectedItem(newSelectItem);
         }
     }
@@ -182,7 +198,7 @@ function WeekIndexItem({targetDay}: { targetDay: DateTime }) {
 
     
     return <div className={itemStyle} onClick={onClickCallback} style={{cursor: 'pointer'}}
-                onDoubleClick={() => plugin.noteController.openNoteBySelectedItem(newSelectItem)}>
+                onDoubleClick={onDoubleClickCallback}>
         <div>{targetDay.weekNumber}</div>
         <StatisticLabel date={DateTime.local(targetDay.year, targetDay.month, targetDay.day)}
                         noteType={NoteType.WEEKLY}/>

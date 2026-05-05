@@ -69,6 +69,7 @@ export default class MainSettingTab extends PluginSettingTab {
         this.displayDotUpperLimitSelect();
         this.displayTodoAnnotationModeSelect();
         this.displayShouldConfirmBeforeCreatingNoteToggle();
+        this.displayShouldOpenNoteOnSingleClickToggle();
         this.displayTemplatePluginSelect();
 
         this.displayNoteSetting(NoteType.DAILY, "每日笔记", this.dailyNotePatternRoot, this.dailyNoteTemplateRoot);
@@ -202,6 +203,18 @@ export default class MainSettingTab extends PluginSettingTab {
             toggle.setValue(this.plugin.noteController.getShouldConfirmBeforeCreatingNote());
             toggle.onChange(async (value) => {
                 this.plugin.noteController.setShouldConfirmBeforeCreatingNote(value);
+            });
+        });
+    }
+
+    private displayShouldOpenNoteOnSingleClickToggle(): void {
+        const {containerEl} = this;
+        let element = new Setting(containerEl);
+        element.setName("单击打开周期性笔记").setDesc("关闭后需要双击日历中的周期性笔记入口才会打开或创建笔记。");
+        element.addToggle(toggle => {
+            toggle.setValue(this.plugin.noteController.getShouldOpenNoteOnSingleClick());
+            toggle.onChange(async (value) => {
+                this.plugin.noteController.setShouldOpenNoteOnSingleClick(value);
             });
         });
     }

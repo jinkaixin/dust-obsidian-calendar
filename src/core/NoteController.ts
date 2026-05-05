@@ -120,6 +120,14 @@ export default class NoteController {
         this.plugin.database.setting.shouldConfirmBeforeCreatingNote = shouldConfirmBeforeCreatingNote;
     }
 
+    public getShouldOpenNoteOnSingleClick(): boolean {
+        return this.plugin.database.setting.shouldOpenNoteOnSingleClick;
+    }
+
+    public setShouldOpenNoteOnSingleClick(shouldOpenNoteOnSingleClick: boolean): void {
+        this.plugin.database.setting.shouldOpenNoteOnSingleClick = shouldOpenNoteOnSingleClick;
+    }
+
     public getNotePatternPlaceHolder(noteType: NoteType): string {
 
         if (noteType === NoteType.DAILY) {
@@ -205,37 +213,38 @@ export default class NoteController {
 
     public async createNote(filename: Path): Promise<void> {
         const abstractFile: TAbstractFile = await PathUtil.create(filename, this.plugin.app.vault);
-        this.openNoteTabView(abstractFile as TFile);
+        await this.openNoteTabView(abstractFile as TFile);
         this.plugin.templateController.insertTemplate(this.noteType);
         // 新建文件之后，需要更新统计信息
         this.plugin.noteStatisticController.addTaskByFile(abstractFile);
     }
 
     private async openNoteTabView(tFile: TFile): Promise<void> {
-        const app = this.plugin.app;
-        let targetView: MarkdownView | null = null;
-        app.workspace.iterateRootLeaves(async leaf => {
-            if (leaf.getViewState().type === "markdown" && leaf.getDisplayText() === tFile.basename) {
-                await leaf.loadIfDeferred(); // Ensure view is fully loaded
+        const {workspace} = this.plugin.app;
+        let targetLeaf: WorkspaceLeaf | null = null;
+        const leaves: WorkspaceLeaf[] = [];
+        workspace.iterateRootLeaves(leaf => leaves.push(leaf));
 
-                let view = leaf.view as MarkdownView;
-                
-                if (view.file !== null && view.file.path === tFile.path && targetView === null) {
-                    targetView = view;
-                }
+        for (const leaf of leaves) {
+            if (leaf.getViewState().type !== "markdown") {
+                continue;
             }
-        });
+            await leaf.loadIfDeferred();
 
-        if (targetView === null) {
-            const app = this.plugin.app;
-            targetView = new MarkdownView(app.workspace.getLeaf("tab"));
-            const targetLeaf: WorkspaceLeaf = targetView.leaf;
-            targetLeaf.openFile(tFile).then(() => {
-            });
+            const view = leaf.view;
+            if (view instanceof MarkdownView && view.file !== null && view.file.path === tFile.path) {
+                targetLeaf = leaf;
+                break;
+            }
         }
-        app.workspace.revealLeaf(targetView.leaf);
+
+        if (targetLeaf === null) {
+            targetLeaf = workspace.getLeaf("tab");
+            await targetLeaf.openFile(tFile);
+        }
+        await workspace.revealLeaf(targetLeaf);
         // 移动焦点到笔记编辑区域
-        app.workspace.setActiveLeaf(targetView.leaf, {focus: true});
+        workspace.setActiveLeaf(targetLeaf, {focus: true});
     }
 
 }

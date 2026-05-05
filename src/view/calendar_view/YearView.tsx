@@ -1,4 +1,4 @@
-import {useContext} from "react";
+import {MouseEvent, useContext} from "react";
 import {useAppDispatch, useAppSelector} from "../redux/hooks";
 import {selectSelectedItem, updateSelectedItem} from "../redux/selectedItemSlice";
 import {PluginContext} from "../context";
@@ -25,8 +25,24 @@ function MonthItem({showYear, showMonth}: { showYear: number, showMonth: number 
         bodyStyle = "year-view-month-item d-selected-item";
     }
 
-    return <div className={bodyStyle} onClick={() => dispatch(updateSelectedItem(newSelectItem))}
-                onDoubleClick={() => plugin.noteController.openNoteBySelectedItem(newSelectItem)}>
+    const onClickCallback = (e: MouseEvent<HTMLDivElement>) => {
+        if (e.detail !== 1) {
+            return;
+        }
+        dispatch(updateSelectedItem(newSelectItem));
+        if (plugin.noteController.getShouldOpenNoteOnSingleClick()) {
+            plugin.noteController.openNoteBySelectedItem(newSelectItem);
+        }
+    };
+
+    const onDoubleClickCallback = () => {
+        if (!plugin.noteController.getShouldOpenNoteOnSingleClick()) {
+            plugin.noteController.openNoteBySelectedItem(newSelectItem);
+        }
+    };
+
+    return <div className={bodyStyle} onClick={onClickCallback}
+                onDoubleClick={onDoubleClickCallback} style={{cursor: 'pointer'}}>
         <div>{showMonth}月</div>
         {
             plugin.database.setting.shouldDisplayWordCount
@@ -53,8 +69,24 @@ function QuarterItem({showYear, showQuarter}: { showYear: number, showQuarter: n
         bodyStyle = "year-view-quarter-item d-selected-item";
     }
 
-    return <div className={bodyStyle} onClick={() => dispatch(updateSelectedItem(newSelectItem))}
-                onDoubleClick={() => plugin.noteController.openNoteBySelectedItem(newSelectItem)}>
+    const onClickCallback = (e: MouseEvent<HTMLDivElement>) => {
+        if (e.detail !== 1) {
+            return;
+        }
+        dispatch(updateSelectedItem(newSelectItem));
+        if (plugin.noteController.getShouldOpenNoteOnSingleClick()) {
+            plugin.noteController.openNoteBySelectedItem(newSelectItem);
+        }
+    };
+
+    const onDoubleClickCallback = () => {
+        if (!plugin.noteController.getShouldOpenNoteOnSingleClick()) {
+            plugin.noteController.openNoteBySelectedItem(newSelectItem);
+        }
+    };
+
+    return <div className={bodyStyle} onClick={onClickCallback}
+                onDoubleClick={onDoubleClickCallback} style={{cursor: 'pointer'}}>
         <div>{plugin.viewController.parseQuarterName(showQuarter)}</div>
         {
             plugin.database.setting.shouldDisplayWordCount

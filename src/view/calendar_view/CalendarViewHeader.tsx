@@ -1,4 +1,4 @@
-import {useContext, useState} from 'react';
+import {MouseEvent, useContext, useState} from 'react';
 import {useAppDispatch, useAppSelector} from "../redux/hooks";
 import {selectSelectedItem, updateSelectedItem} from "../redux/selectedItemSlice";
 import {selectCalendarViewType, updateCalendarViewType} from "../redux/calendarViewType";
@@ -31,12 +31,28 @@ function YearItem() {
         dispatch(updateSelectedItem(newSelectedItem));
     }
 
+    const openYearNote = () => {
+        plugin.noteController.openNoteByNoteType(DateTime.local(selectedDate.year), NoteType.YEARLY);
+    }
+
+    const onClickCallback = (e: MouseEvent<HTMLDivElement>) => {
+        if (e.detail === 1 && plugin.noteController.getShouldOpenNoteOnSingleClick()) {
+            openYearNote();
+        }
+    }
+
+    const onDoubleClickCallback = () => {
+        if (!plugin.noteController.getShouldOpenNoteOnSingleClick()) {
+            openYearNote();
+        }
+    }
+
     return <div className="calendar-header-block-year">
         <div className="calendar-header-body-year" onMouseEnter={() => setHidden(false)}
              onMouseLeave={() => setHidden(true)}>
             <ChevronLeft className="d-icon" style={{visibility: hidden ? 'hidden' : 'visible'}} onClick={toLastYear}/>
-            <div className="calendar-header-content-year"
-                 onDoubleClick={() => plugin.noteController.openNoteByNoteType(DateTime.local(selectedDate.year), NoteType.YEARLY)}>
+            <div className="calendar-header-content-year" onClick={onClickCallback}
+                 onDoubleClick={onDoubleClickCallback} style={{cursor: 'pointer'}}>
                 <div>{selectedDate.year}年</div>
             </div>
             <ChevronRight className="d-icon" style={{visibility: hidden ? 'hidden' : 'visible'}} onClick={toNextYear}/>
@@ -67,12 +83,28 @@ function MonthItem() {
         dispatch(updateSelectedItem(newSelectedItem));
     }
 
+    const openMonthNote = () => {
+        plugin.noteController.openNoteByNoteType(DateTime.local(selectedDate.year, selectedDate.month), NoteType.MONTHLY);
+    }
+
+    const onClickCallback = (e: MouseEvent<HTMLDivElement>) => {
+        if (e.detail === 1 && plugin.noteController.getShouldOpenNoteOnSingleClick()) {
+            openMonthNote();
+        }
+    }
+
+    const onDoubleClickCallback = () => {
+        if (!plugin.noteController.getShouldOpenNoteOnSingleClick()) {
+            openMonthNote();
+        }
+    }
+
     return <div className="calendar-header-block-month">
         <div className="calendar-header-body-month" onMouseEnter={() => setHidden(false)}
              onMouseLeave={() => setHidden(true)}>
             <ChevronLeft className="d-icon" style={{visibility: hidden ? 'hidden' : 'visible'}} onClick={toLastMonth}/>
-            <div className="calendar-header-content-month"
-                 onDoubleClick={() => plugin.noteController.openNoteByNoteType(DateTime.local(selectedDate.year, selectedDate.month), NoteType.MONTHLY)}>
+            <div className="calendar-header-content-month" onClick={onClickCallback}
+                 onDoubleClick={onDoubleClickCallback} style={{cursor: 'pointer'}}>
                 <div>{selectedDate.month}月</div>
             </div>
             <ChevronRight className="d-icon" style={{visibility: hidden ? 'hidden' : 'visible'}} onClick={toNextMonth}/>
@@ -103,13 +135,29 @@ function QuarterItem() {
         dispatch(updateSelectedItem(newSelectedItem));
     }
 
+    const openQuarterNote = () => {
+        plugin.noteController.openNoteByNoteType(DateTime.local(selectedDate.year, selectedDate.quarter * 3 - 2), NoteType.QUARTERLY);
+    }
+
+    const onClickCallback = (e: MouseEvent<HTMLDivElement>) => {
+        if (e.detail === 1 && plugin.noteController.getShouldOpenNoteOnSingleClick()) {
+            openQuarterNote();
+        }
+    }
+
+    const onDoubleClickCallback = () => {
+        if (!plugin.noteController.getShouldOpenNoteOnSingleClick()) {
+            openQuarterNote();
+        }
+    }
+
     return <div className="calendar-header-block-quarter">
         <div className="calendar-header-body-quarter" onMouseEnter={() => setHidden(false)}
              onMouseLeave={() => setHidden(true)}>
             <ChevronLeft className="d-icon" style={{visibility: hidden ? 'hidden' : 'visible'}}
                          onClick={toLastQuarter}/>
-            <div className="calendar-header-content-quarter"
-                 onDoubleClick={() => plugin.noteController.openNoteByNoteType(DateTime.local(selectedDate.year, selectedDate.quarter * 3 - 2), NoteType.QUARTERLY)}>
+            <div className="calendar-header-content-quarter" onClick={onClickCallback}
+                 onDoubleClick={onDoubleClickCallback} style={{cursor: 'pointer'}}>
                 <div>{plugin.viewController.parseQuarterName(selectedDate.quarter)}</div>
             </div>
             <ChevronRight className="d-icon" style={{visibility: hidden ? 'hidden' : 'visible'}}
